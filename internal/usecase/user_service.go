@@ -1,8 +1,10 @@
-package repository
+package usecase
 
-import "github.com/wahyunurdian26/cst_app_new/internal/entity"
+import (
+	"github.com/wahyunurdian26/cst_app_new/internal/entity"
+)
 
-type UserRepository interface {
+type UserService interface {
 	Create(user *entity.User) error
 	GetById(id uint) (*entity.User, error)
 	Update(user *entity.User) error
