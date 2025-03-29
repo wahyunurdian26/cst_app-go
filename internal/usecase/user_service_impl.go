@@ -49,23 +49,26 @@ func (s *userService) GetById(id uint) (*entity.User, error) {
 }
 
 // Implementasi metode Update dengan validasi
-func (s *userService) Update(user *entity.User) error {
+func (s *userService) Update(userID uint, updates map[string]interface{}) error {
 	// Pastikan user ada sebelum diupdate
-	existingUser, err := s.repo.GetById(user.ID)
+	existingUser, err := s.repo.GetById(userID)
 	if err != nil || existingUser == nil {
 		return errors.New("user not found")
 	}
 
-	// Update password jika ada perubahan
-	if user.Password != "" {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	// Jika password ingin diupdate, hash dulu
+	if password, ok := updates["password"].(string); ok && password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}
-		user.Password = string(hashedPassword)
+		updates["password"] = string(hashedPassword)
+	} else {
+		delete(updates, "password") // Jangan update password jika tidak dikirim
 	}
 
-	return s.repo.Update(user)
+	// Lakukan update dengan GORM
+	return s.repo.UpdateFields(userID, updates)
 }
 
 // Implementasi metode Delete dengan validasi

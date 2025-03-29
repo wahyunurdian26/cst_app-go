@@ -116,8 +116,9 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(response)
 	}
 
-	var user entity.User
-	if err := c.BodyParser(&user); err != nil {
+	// Ambil data JSON sebagai map
+	var updates map[string]interface{}
+	if err := c.BodyParser(&updates); err != nil {
 		response := web.WebResponse{
 			Code:   400,
 			Status: "BAD REQUEST",
@@ -126,8 +127,8 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(response)
 	}
 
-	user.ID = uint(id)
-	if err := h.userService.Update(&user); err != nil {
+	// Panggil service untuk update
+	if err := h.userService.Update(uint(id), updates); err != nil {
 		response := web.WebResponse{
 			Code:   500,
 			Status: "INTERNAL SERVER ERROR",
@@ -136,7 +137,6 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(response)
 	}
 
-	
 	response := web.WebResponse{
 		Code:   200,
 		Status: "OK",
