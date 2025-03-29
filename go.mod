@@ -1,6 +1,8 @@
 module github.com/wahyunurdian26/cst_app_new
 
-go 1.22.5
+go 1.23.0
+
+toolchain go1.23.7
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
@@ -30,8 +32,9 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
 	gorm.io/gorm v1.25.12 // indirect
