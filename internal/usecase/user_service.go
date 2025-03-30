@@ -8,9 +8,9 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, request *model.UserCreateRequest) (*model.UserResponse, error)
+	Create(ctx context.Context, request *model.UserCreateRequest) (*model.Response, error)
 	GetById(id uint) (*entity.User, error)
-	Update(ctx context.Context, req *model.UserUpdateRequest) (*model.UserResponse, error)
+	Update(ctx context.Context, req *model.UserUpdateRequest) (*model.Response, error)
 	Delete(id uint) error
 	GetAll() ([]entity.User, error)
 }

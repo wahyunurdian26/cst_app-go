@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/wahyunurdian26/cst_app_new/db/migrations"
 	"github.com/wahyunurdian26/cst_app_new/internal/config"
@@ -19,13 +17,15 @@ func main() {
 	// Load konfigurasi
 	viperConfig := config.NewViper()
 	db := config.NewDatabase(viperConfig)
+	log := config.NewLogger()
+	validator := config.NewValidator()
 
 	// Migrasi database
 	migrations.MigrateDB(db)
 
 	// Inisialisasi Repository, Usecase, dan Controller
 	userRepo := repository.NewUserRepository(db)
-	userService := usecase.NewUserService(userRepo)
+	userService := usecase.NewUserService(userRepo, validator, log)
 	userController := controller.NewUserController(userService)
 
 	// Setup Routing

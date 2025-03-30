@@ -17,11 +17,19 @@ type UserCreateRequest struct {
 type UserUpdateRequest struct {
 	Id                     uint   `json:"id" validate:"omitempty"`
 	Username               string `json:"username" validate:"omitempty"`
-	Password               string `json:"password" validate:"omitempty,min=8"`
+	Password               string `json:"password" validate:"omitempty,min=6"`
 	IDRole                 string `json:"id_role" validate:"omitempty"`
 	IDBusinessGroup        string `json:"id_business_group" validate:"omitempty"`
 	IDSubBusinessGroup     string `json:"id_sub_business_group" validate:"omitempty"`
 	EmailPIC               string `json:"email_pic" validate:"omitempty,email"`
 	StatusActive           bool   `json:"status_active" validate:"omitempty"`
 	IDBusinessGroupDigital string `json:"id_business_group_digital" validate:"omitempty"`
+}
+
+type UserDeleteRequest struct {
+	Id uint `json:"id" validate:"omitempty"`
+}
+
+type UserGetByIdRequest struct {
+	Id uint `json:"id" validate:"omitempty"`
 }
