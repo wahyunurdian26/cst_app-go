@@ -5,41 +5,59 @@ import (
 	"gorm.io/gorm"
 )
 
-// Implementasi UserRepository
-type userRepository struct {
-	db *gorm.DB
+// Implementasi dengan nama berbeda
+type UserRepositoryImpl struct {
+	DB *gorm.DB
 }
 
-// Konstruktor untuk membuat UserRepository baru
+// Konstruktor
 func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepository{db: db}
+	return &UserRepositoryImpl{DB: db} // ✅ Benar, menggunakan pointer
 }
 
 // Implementasi metode Create
-func (r *userRepository) Create(user *entity.User) error {
-	return r.db.Create(user).Error
+func (r *UserRepositoryImpl) Create(user *entity.User) error {
+	return r.DB.Create(user).Error
+}
+
+// Implementasi metode FindByEmailOrUsername
+func (r *UserRepositoryImpl) FindByEmailOrUsername(email, username string) (*entity.User, error) {
+	var user entity.User
+	if err := r.DB.Where("email = ? OR username = ?", email, username).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
 }
 
 // Implementasi metode GetById
-func (r *userRepository) GetById(id uint) (*entity.User, error) {
+func (r *UserRepositoryImpl) GetById(id uint) (*entity.User, error) {
 	var user entity.User
-	err := r.db.First(&user, id).Error
-	return &user, err
+	err := r.DB.Where("id = ?", id).Take(&user).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil // ✅ Konsisten dengan FindByEmailOrUsername
+		}
+		return nil, err
+	}
+	return &user, nil
 }
 
 // Implementasi metode Update
-func (r *userRepository) Update(user *entity.User) error {
-	return r.db.Save(user).Error
+func (r *UserRepositoryImpl) Update(user *entity.User) error {
+	return r.DB.Save(user).Error
 }
 
 // Implementasi metode Delete
-func (r *userRepository) Delete(id uint) error {
-	return r.db.Delete(&entity.User{}, id).Error
+func (r *UserRepositoryImpl) Delete(id uint) error {
+	return r.DB.Delete(&entity.User{}, id).Error
 }
 
 // Implementasi metode GetAll
-func (r *userRepository) GetAll() ([]entity.User, error) {
+func (r *UserRepositoryImpl) GetAll() ([]entity.User, error) {
 	var users []entity.User
-	err := r.db.Find(&users).Error
+	err := r.DB.Find(&users).Error
 	return users, err
 }

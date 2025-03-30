@@ -13,7 +13,7 @@ type User struct {
 	IDBusinessGroup        string    `gorm:"type:varchar(50)" json:"id_business_group"`
 	IDSubBusinessGroup     string    `gorm:"type:varchar(50)" json:"id_sub_business_group"`
 	EmailPIC               string    `gorm:"type:varchar(255)" json:"email_pic"`
-	StatusActive           string    `gorm:"type:varchar(50)" json:"status_active"`
+	StatusActive           bool      `gorm:"type:bool" json:"status_active"`
 	IDBusinessGroupDigital string    `gorm:"type:varchar(50)" json:"id_business_group_digital"`
 	CreatedAt              time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt              time.Time `gorm:"autoUpdateTime" json:"updated_at"`

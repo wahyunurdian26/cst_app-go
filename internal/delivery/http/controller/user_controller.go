@@ -4,170 +4,111 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/wahyunurdian26/cst_app_new/internal/entity"
+	"github.com/wahyunurdian26/cst_app_new/internal/helper"
+	"github.com/wahyunurdian26/cst_app_new/internal/model"
 	"github.com/wahyunurdian26/cst_app_new/internal/usecase"
-	"github.com/wahyunurdian26/cst_app_new/internal/web"
 )
 
 type UserController struct {
-	userService usecase.UserService
+	UserService usecase.UserService
 }
 
 func NewUserController(userService usecase.UserService) *UserController {
-	return &UserController{userService: userService}
+	return &UserController{UserService: userService}
 }
 
-func (h *UserController) CreateUser(c *fiber.Ctx) error {
-	var user entity.User
-
-	// body := c.Body()
-	// println("Request Body:", string(body))
-
-	// Parse JSON request body ke struct User
-	if err := c.BodyParser(&user); err != nil {
-		response := web.WebResponse{
-			Code:   400,
-			Status: "BAD REQUEST",
-			Data:   "Invalid request format",
-		}
-		return c.Status(fiber.StatusBadRequest).JSON(response)
+func (c *UserController) CreateUser(ctx *fiber.Ctx) error {
+	request := new(model.UserCreateRequest)
+	if err := ctx.BodyParser(request); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	// Simpan user menggunakan service
-	if err := h.userService.Create(&user); err != nil {
-		response := web.WebResponse{
-			Code:   500,
-			Status: "INTERNAL SERVER ERROR",
-			Data:   err.Error(),
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(response)
+	response, err := c.UserService.Create(ctx.Context(), request)
+	if err != nil {
+		return helper.ErrorResponse(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Berhasil
-	response := web.WebResponse{
-		Code:   201,
-		Status: "CREATED",
-		Data: fiber.Map{
-			"id":        user.ID,
-			"email":     user.Email,
-			"username":  user.Username,
-			"createdAt": user.CreatedAt,
-		},
-	}
-	return c.Status(fiber.StatusCreated).JSON(response)
+	return ctx.Status(fiber.StatusCreated).JSON(response)
 }
 
 func (h *UserController) GetAllUsers(c *fiber.Ctx) error {
-	users, err := h.userService.GetAll()
+	users, err := h.UserService.GetAll()
 	if err != nil {
-		response := web.WebResponse{
+		return c.Status(fiber.StatusInternalServerError).JSON(model.UserResponse{
 			Code:   500,
 			Status: "INTERNAL SERVER ERROR",
 			Data:   err.Error(),
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(response)
+		})
 	}
 
-	response := web.WebResponse{
+	return c.Status(fiber.StatusOK).JSON(model.UserResponse{
 		Code:   200,
 		Status: "OK",
 		Data:   users,
-	}
-	return c.Status(fiber.StatusOK).JSON(response)
+	})
 }
 
 func (h *UserController) GetUserByID(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		response := web.WebResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(model.UserResponse{
 			Code:   400,
 			Status: "BAD REQUEST",
 			Data:   "Invalid user ID",
-		}
-		return c.Status(fiber.StatusBadRequest).JSON(response)
+		})
 	}
 
-	user, err := h.userService.GetById(uint(id))
+	user, err := h.UserService.GetById(uint(id))
 	if err != nil {
-		response := web.WebResponse{
+		return c.Status(fiber.StatusNotFound).JSON(model.UserResponse{
 			Code:   404,
 			Status: "NOT FOUND",
 			Data:   "User not found",
-		}
-		return c.Status(fiber.StatusNotFound).JSON(response)
+		})
 	}
 
-	response := web.WebResponse{
+	return c.Status(fiber.StatusOK).JSON(model.UserResponse{
 		Code:   200,
 		Status: "OK",
 		Data:   user,
-	}
-	return c.Status(fiber.StatusOK).JSON(response)
+	})
 }
 
-func (h *UserController) UpdateUser(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
+func (uc *UserController) Update(c *fiber.Ctx) error {
+	var request model.UserUpdateRequest
+	if err := c.BodyParser(&request); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	response, err := uc.UserService.Update(c.Context(), &request)
 	if err != nil {
-		response := web.WebResponse{
-			Code:   400,
-			Status: "BAD REQUEST",
-			Data:   "Invalid user ID",
-		}
-		return c.Status(fiber.StatusBadRequest).JSON(response)
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	var user entity.User
-	if err := c.BodyParser(&user); err != nil {
-		response := web.WebResponse{
-			Code:   400,
-			Status: "BAD REQUEST",
-			Data:   "Invalid request format",
-		}
-		return c.Status(fiber.StatusBadRequest).JSON(response)
-	}
-
-	user.ID = uint(id)
-	if err := h.userService.Update(&user); err != nil {
-		response := web.WebResponse{
-			Code:   500,
-			Status: "INTERNAL SERVER ERROR",
-			Data:   err.Error(),
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(response)
-	}
-
-	response := web.WebResponse{
-		Code:   200,
-		Status: "OK",
-		Data:   "User updated successfully",
-	}
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 func (h *UserController) DeleteUser(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		response := web.WebResponse{
+		return c.Status(fiber.StatusBadRequest).JSON(model.UserResponse{
 			Code:   400,
 			Status: "BAD REQUEST",
 			Data:   "Invalid user ID",
-		}
-		return c.Status(fiber.StatusBadRequest).JSON(response)
+		})
 	}
 
-	if err := h.userService.Delete(uint(id)); err != nil {
-		response := web.WebResponse{
+	if err := h.UserService.Delete(uint(id)); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.UserResponse{
 			Code:   500,
 			Status: "INTERNAL SERVER ERROR",
 			Data:   err.Error(),
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(response)
+		})
 	}
 
-	response := web.WebResponse{
+	return c.Status(fiber.StatusOK).JSON(model.UserResponse{
 		Code:   200,
 		Status: "OK",
 		Data:   "User deleted successfully",
-	}
-	return c.Status(fiber.StatusOK).JSON(response)
+	})
 }
