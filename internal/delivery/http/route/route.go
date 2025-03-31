@@ -19,6 +19,6 @@ func (c *RouteConfig) UserRoutes() {
 	c.App.Post("/api/users", c.UserController.CreateUser)
 	c.App.Get("/api/users", c.UserController.GetAllUsers)
 	c.App.Get("/api/users/:id", c.UserController.GetUserByID)
-	c.App.Patch("/api/users/:id", c.UserController.Update)
+	c.App.Patch("/api/users/:id", c.UserController.UpdateUser)
 	c.App.Delete("/api/users/:id", c.UserController.DeleteUser)
 }

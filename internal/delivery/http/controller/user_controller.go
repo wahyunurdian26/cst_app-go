@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,113 +18,99 @@ func NewUserController(userService usecase.UserService) *UserController {
 	return &UserController{UserService: userService}
 }
 
-func (c *UserController) CreateUser(ctx *fiber.Ctx) error {
+func (h *UserController) CreateUser(c *fiber.Ctx) error {
+	if len(c.Body()) == 0 {
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Request body is required")
+	}
+
 	request := new(model.UserCreateRequest)
-	if err := ctx.BodyParser(request); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(model.Response{
-			Code:   400,
-			Status: "BAD REQUEST",
-			Data:   err.Error(),
-		})
+	if err := c.BodyParser(request); err != nil {
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	response, err := c.UserService.Create(ctx.Context(), request)
+	response, err := h.UserService.Create(c.Context(), request)
 	if err != nil {
-		return helper.ErrorResponse(ctx, fiber.StatusInternalServerError, err.Error())
+		return helper.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.Status(fiber.StatusCreated).JSON(response)
+	return helper.JSONResponse(c, fiber.StatusCreated, "User successfully created", response)
 }
 
 func (h *UserController) GetAllUsers(c *fiber.Ctx) error {
 	users, err := h.UserService.GetAll()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.Response{
-			Code:   500,
-			Status: "INTERNAL SERVER ERROR",
-			Data:   err.Error(),
-		})
+		return helper.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve users")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(model.Response{
-		Code:   200,
-		Status: "OK",
-		Data:   users,
-	})
+	return helper.JSONResponse(c, fiber.StatusOK, "Users retrieved successfully", users)
 }
 
 func (h *UserController) GetUserByID(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.Response{
-			Code:   400,
-			Status: "BAD REQUEST",
-			Data:   "Invalid user ID",
-		})
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
 	}
 
 	user, err := h.UserService.GetById(uint(id))
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(model.Response{
-			Code:   404,
-			Status: "NOT FOUND",
-			Data:   "User not found",
-		})
+		var fiberErr *fiber.Error
+		if errors.As(err, &fiberErr) {
+			return helper.ErrorResponse(c, fiberErr.Code, fiberErr.Message)
+		}
+		return helper.ErrorResponse(c, fiber.StatusInternalServerError, "Something went wrong")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(model.Response{
-		Code:   200,
-		Status: "OK",
-		Data:   user,
-	})
+	if user == nil {
+		return helper.ErrorResponse(c, fiber.StatusNotFound, "User not found")
+	}
+
+	return helper.JSONResponse(c, fiber.StatusOK, "User retrieved successfully", user)
 }
 
-func (u *UserController) Update(ctx *fiber.Ctx) error {
+func (h *UserController) UpdateUser(c *fiber.Ctx) error {
+	if len(c.Body()) == 0 {
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Request body is required")
+	}
 
 	var request model.UserUpdateRequest
-	id, err := strconv.Atoi(ctx.Params("id"))
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(model.Response{
-			Code:   400,
-			Status: "BAD REQUEST",
-			Data:   "Invalid user ID",
-		})
-
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
 	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
 	request.Id = uint(id)
-	if err := ctx.BodyParser(&request); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
-	}
-
-	response, err := u.UserService.Update(ctx.Context(), &request)
+	response, err := h.UserService.Update(c.Context(), &request)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		var fiberErr *fiber.Error
+		if errors.As(err, &fiberErr) {
+			return helper.ErrorResponse(c, fiberErr.Code, fiberErr.Message)
+		}
+		return helper.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(response)
+	// Langsung return response dari service tanpa nested JSON tambahan
+	return helper.JSONResponse(c, fiber.StatusOK, "User updated successfully", response)
+
 }
 
 func (h *UserController) DeleteUser(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.Response{
-			Code:   400,
-			Status: "BAD REQUEST",
-			Data:   "Invalid user ID",
-		})
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
 	}
 
-	if err := h.UserService.Delete(uint(id)); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.Response{
-			Code:   500,
-			Status: "INTERNAL SERVER ERROR",
-			Data:   err.Error(),
-		})
+	err = h.UserService.Delete(uint(id))
+	if err != nil {
+		var fiberErr *fiber.Error
+		if errors.As(err, &fiberErr) {
+			return helper.ErrorResponse(c, fiberErr.Code, fiberErr.Message)
+		}
+		return helper.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(model.Response{
-		Code:   200,
-		Status: "OK",
-		Data:   "User deleted successfully",
-	})
+	return helper.JSONResponse(c, fiber.StatusOK, "User deleted successfully", nil)
 }

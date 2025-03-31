@@ -11,9 +11,8 @@ import (
 	"github.com/wahyunurdian26/cst_app_new/internal/entity"
 	"github.com/wahyunurdian26/cst_app_new/internal/model"
 	"github.com/wahyunurdian26/cst_app_new/internal/repository"
-	"gorm.io/gorm"
-
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type userService struct {
@@ -22,7 +21,6 @@ type userService struct {
 	Validate       *validator.Validate
 }
 
-// NewUserService mengembalikan instance dari UserService
 func NewUserService(userRepository repository.UserRepository, validator *validator.Validate, log *logrus.Logger) UserService {
 	return &userService{
 		UserRepository: userRepository,
@@ -31,36 +29,33 @@ func NewUserService(userRepository repository.UserRepository, validator *validat
 	}
 }
 
-// Create membuat user baru dengan validasi dan hashing password
 func (u *userService) Create(ctx context.Context, request *model.UserCreateRequest) (*model.Response, error) {
-	// Validasi request
-	err := u.Validate.Struct(request)
-
-	if err != nil {
-		u.Log.Warn("Failed to validate  request body")
+	// Validate request
+	if err := u.Validate.Struct(request); err != nil {
+		u.Log.Warnf("User creation failed: validation error: %v", err)
 		return nil, fiber.ErrBadRequest
-
 	}
 
-	//cek apakah sudah ada
+	// Check if user already exists
 	existingUser, err := u.UserRepository.FindByEmailOrUsername(request.Email, request.Username)
 	if err != nil {
-		u.Log.Warn("Failed to FindUser")
+		u.Log.Warnf("User creation failed: database error: %v", err)
 		return nil, fmt.Errorf("failed to check existing user: %w", err)
 	}
 
-	if existingUser != nil { // Jika user sudah ada
+	if existingUser != nil {
+		u.Log.Warnf("User creation failed: user already exists with email %s or username %s", request.Email, request.Username)
 		return nil, fiber.ErrConflict
 	}
 
 	// Hash password
 	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
-		u.Log.Warn("Failed to generate password")
+		u.Log.Warnf("User creation failed: password hashing error: %v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
-	// Buat user
+	// Create new user entity
 	user := &entity.User{
 		Email:                  request.Email,
 		Username:               request.Username,
@@ -73,74 +68,66 @@ func (u *userService) Create(ctx context.Context, request *model.UserCreateReque
 		IDBusinessGroupDigital: request.IDBusinessGroupDigital,
 	}
 
-	// Simpan ke database
+	// Save user to database
 	if err := u.UserRepository.Create(user); err != nil {
-		u.Log.Warn("Failed to create userr")
+		u.Log.Warnf("User creation failed: database error: %v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
-	// Response sukses
+	u.Log.Infof("User created successfully: ID %d, Email: %s, Username: %s", user.ID, user.Email, user.Username)
+
 	return &model.Response{
 		Code:    fiber.StatusCreated,
 		Status:  "CREATED",
 		Message: "User successfully created",
-		Data: map[string]interface{}{
-			"id":                        user.ID,
-			"email":                     user.Email,
-			"username":                  user.Username,
-			"id_role":                   user.IDRole,
-			"id_business_group":         user.IDBusinessGroup,
-			"id_sub_business_group":     user.IDSubBusinessGroup,
-			"email_pic":                 user.EmailPIC,
-			"status_active":             user.StatusActive,
-			"id_business_group_digital": user.IDBusinessGroupDigital,
-		},
+		Data:    user,
 	}, nil
 }
 
-// Implementasi metode GetById dengan pengecekan apakah user ada
 func (u *userService) GetById(id uint) (*entity.User, error) {
 	user, err := u.UserRepository.GetById(id)
 	if err != nil {
-		u.Log.Warn("Failed to GetById")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fiber.ErrNotFound
+		}
+		u.Log.Warnf("Failed to get user by ID %d: %v", id, err)
 		return nil, err
 	}
 	return user, nil
 }
 
-// Implementasi metode Update dengan validasi
 func (u *userService) Update(ctx context.Context, request *model.UserUpdateRequest) (*model.Response, error) {
-	// Validasi request
+	if request == nil {
+		u.Log.Warn("Update failed: missing request body")
+		return nil, fiber.NewError(fiber.StatusBadRequest, "Request body is required")
+	}
+
 	if err := u.Validate.Struct(request); err != nil {
-		u.Log.Warn("Failed to validate user request")
+		u.Log.Warnf("Update failed: validation error: %v", err)
 		return nil, fiber.NewError(fiber.StatusBadRequest, "Invalid request data")
 	}
 
-	// Cek apakah user ada di database
-
 	user, err := u.UserRepository.GetById(request.Id)
 	if err != nil {
-		u.Log.Warn("Failed to GetById")
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			u.Log.Warnf("Update failed: user with ID %d not found", request.Id)
 			return nil, fiber.ErrNotFound
 		}
-		return nil, err // Error lain
+		u.Log.Warnf("Update failed: database error for user ID %d: %v", request.Id, err)
+		return nil, err
 	}
 
-	// Update hanya field yang diisi (Gunakan GORM `Updates`)
-
+	// Update fields if provided
 	if request.Username != "" {
-
 		user.Username = request.Username
 	}
 	if request.Password != "" {
 		password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 		if err != nil {
-			u.Log.Warn("Failed to generate hash password")
+			u.Log.Warn("Update failed: password hashing error")
 			return nil, fiber.ErrInternalServerError
 		}
 		user.Password = string(password)
-
 	}
 	if request.IDRole != "" {
 		user.IDRole = request.IDRole
@@ -154,17 +141,18 @@ func (u *userService) Update(ctx context.Context, request *model.UserUpdateReque
 	if request.EmailPIC != "" {
 		user.EmailPIC = request.EmailPIC
 	}
-	user.StatusActive = request.StatusActive // Tetap di-update walaupun default-nya false
+	user.StatusActive = request.StatusActive
 	if request.IDBusinessGroupDigital != "" {
 		user.IDBusinessGroupDigital = request.IDBusinessGroupDigital
 	}
 
-	// Jalankan update di database
-
+	// Save updated user to database
 	if err := u.UserRepository.Update(user); err != nil {
-		u.Log.Warn("Failed to save user")
+		u.Log.Warnf("Update failed: database error for user ID %d: %v", request.Id, err)
 		return nil, fiber.ErrInternalServerError
 	}
+
+	u.Log.Infof("User updated successfully: ID %d", request.Id)
 
 	return &model.Response{
 		Code:    fiber.StatusOK,
@@ -174,23 +162,19 @@ func (u *userService) Update(ctx context.Context, request *model.UserUpdateReque
 	}, nil
 }
 
-// Implementasi metode Delete dengan validasi
 func (u *userService) Delete(id uint) error {
-	// Pastikan user ada sebelum dihapus
 	existingUser, err := u.UserRepository.GetById(id)
 	if err != nil || existingUser == nil {
-		u.Log.Warn("Failed to find user")
+		u.Log.Warnf("Delete failed: user ID %d not found", id)
 		return errors.New("user not found")
 	}
-
 	return u.UserRepository.Delete(id)
 }
 
-// Implementasi metode GetAll untuk mendapatkan semua user
 func (u *userService) GetAll() ([]entity.User, error) {
 	users, err := u.UserRepository.GetAll()
 	if err != nil {
-		u.Log.Warn("Failed to get all user")
+		u.Log.Warnf("Failed to retrieve users: %v", err)
 		return nil, err
 	}
 	return users, nil
