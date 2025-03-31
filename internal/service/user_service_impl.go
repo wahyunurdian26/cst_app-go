@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func NewUserService(userRepository repository.UserRepository, validator *validat
 	}
 }
 
-func (u *userService) Create(ctx context.Context, request *model.UserCreateRequest) (*model.Response, error) {
+func (u *userService) Create(ctx context.Context, request *model.UserCreateRequest) (*entity.User, error) {
 	// Validate request
 	if err := u.Validate.Struct(request); err != nil {
 		u.Log.Warnf("User creation failed: validation error: %v", err)
@@ -76,12 +76,8 @@ func (u *userService) Create(ctx context.Context, request *model.UserCreateReque
 
 	u.Log.Infof("User created successfully: ID %d, Email: %s, Username: %s", user.ID, user.Email, user.Username)
 
-	return &model.Response{
-		Code:    fiber.StatusCreated,
-		Status:  "CREATED",
-		Message: "User successfully created",
-		Data:    user,
-	}, nil
+	// Kembalikan entity.User sesuai dengan deklarasi interface
+	return user, nil
 }
 
 func (u *userService) GetById(id uint) (*entity.User, error) {
@@ -96,7 +92,7 @@ func (u *userService) GetById(id uint) (*entity.User, error) {
 	return user, nil
 }
 
-func (u *userService) Update(ctx context.Context, request *model.UserUpdateRequest) (*model.Response, error) {
+func (u *userService) Update(ctx context.Context, request *model.UserUpdateRequest) (*entity.User, error) {
 	if request == nil {
 		u.Log.Warn("Update failed: missing request body")
 		return nil, fiber.NewError(fiber.StatusBadRequest, "Request body is required")
@@ -115,6 +111,11 @@ func (u *userService) Update(ctx context.Context, request *model.UserUpdateReque
 		}
 		u.Log.Warnf("Update failed: database error for user ID %d: %v", request.Id, err)
 		return nil, err
+	}
+
+	if user == nil {
+		u.Log.Warnf("Update failed: user with ID %d not found", request.Id)
+		return nil, fiber.ErrNotFound
 	}
 
 	// Update fields if provided
@@ -154,12 +155,7 @@ func (u *userService) Update(ctx context.Context, request *model.UserUpdateReque
 
 	u.Log.Infof("User updated successfully: ID %d", request.Id)
 
-	return &model.Response{
-		Code:    fiber.StatusOK,
-		Status:  "UPDATED",
-		Message: "User successfully updated",
-		Data:    user,
-	}, nil
+	return user, nil // ⬅️ Hanya return entity.User, tanpa response tambahan
 }
 
 func (u *userService) Delete(id uint) error {

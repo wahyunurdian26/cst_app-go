@@ -7,7 +7,7 @@ import (
 	"github.com/wahyunurdian26/cst_app_new/internal/delivery/http/controller"
 	"github.com/wahyunurdian26/cst_app_new/internal/delivery/http/route"
 	"github.com/wahyunurdian26/cst_app_new/internal/repository"
-	"github.com/wahyunurdian26/cst_app_new/internal/usecase"
+	"github.com/wahyunurdian26/cst_app_new/internal/service"
 )
 
 func main() {
@@ -23,9 +23,9 @@ func main() {
 	// Migrasi database
 	migrations.MigrateDB(db)
 
-	// Inisialisasi Repository, Usecase, dan Controller
+	// Inisialisasi Repository, service, dan Controller
 	userRepo := repository.NewUserRepository(db)
-	userService := usecase.NewUserService(userRepo, validator, log)
+	userService := service.NewUserService(userRepo, validator, log)
 	userController := controller.NewUserController(userService)
 
 	// Setup Routing

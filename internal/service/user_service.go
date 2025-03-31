@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"context"
@@ -8,9 +8,9 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, request *model.UserCreateRequest) (*model.Response, error)
+	Create(ctx context.Context, request *model.UserCreateRequest) (*entity.User, error) // Sesuaikan return type
 	GetById(id uint) (*entity.User, error)
-	Update(ctx context.Context, req *model.UserUpdateRequest) (*model.Response, error)
+	Update(ctx context.Context, request *model.UserUpdateRequest) (*entity.User, error)
 	Delete(id uint) error
 	GetAll() ([]entity.User, error)
 }

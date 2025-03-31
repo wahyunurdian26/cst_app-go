@@ -7,14 +7,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/wahyunurdian26/cst_app_new/internal/helper"
 	"github.com/wahyunurdian26/cst_app_new/internal/model"
-	"github.com/wahyunurdian26/cst_app_new/internal/usecase"
+	"github.com/wahyunurdian26/cst_app_new/internal/service"
 )
 
 type UserController struct {
-	UserService usecase.UserService
+	UserService service.UserService
 }
 
-func NewUserController(userService usecase.UserService) *UserController {
+func NewUserController(userService service.UserService) *UserController {
 	return &UserController{UserService: userService}
 }
 
@@ -92,7 +92,6 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 		return helper.ErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Langsung return response dari service tanpa nested JSON tambahan
 	return helper.JSONResponse(c, fiber.StatusOK, "User updated successfully", response)
 
 }
