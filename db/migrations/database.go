@@ -12,6 +12,11 @@ func MigrateDB(db *gorm.DB) {
 		&entity.User{},
 		&entity.Group{},
 		&entity.SubGroup{},
+		&entity.Brand{},
+		&entity.Offer{},
+		&entity.Sender{},
+		&entity.Product{},
+		&entity.Campaign{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)

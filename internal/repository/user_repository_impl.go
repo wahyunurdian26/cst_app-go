@@ -5,14 +5,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// Implementasi dengan nama berbeda
 type UserRepositoryImpl struct {
 	DB *gorm.DB
 }
 
 // Konstruktor
 func NewUserRepository(db *gorm.DB) UserRepository {
-	return &UserRepositoryImpl{DB: db} // ✅ Benar, menggunakan pointer
+	return &UserRepositoryImpl{DB: db}
 }
 
 // Implementasi metode Create
@@ -38,7 +37,7 @@ func (r *UserRepositoryImpl) GetById(id uint) (*entity.User, error) {
 	err := r.DB.Where("id = ?", id).Take(&user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil // ✅ Konsisten dengan FindByEmailOrUsername
+			return nil, nil
 		}
 		return nil, err
 	}
