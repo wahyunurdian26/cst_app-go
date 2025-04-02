@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/google/uuid"
 	"github.com/wahyunurdian26/cst_app_new/internal/entity"
 	"gorm.io/gorm"
 )
@@ -32,7 +33,7 @@ func (r *UserRepositoryImpl) FindByEmailOrUsername(email, username string) (*ent
 }
 
 // Implementasi metode GetById
-func (r *UserRepositoryImpl) GetById(id uint) (*entity.User, error) {
+func (r *UserRepositoryImpl) GetById(id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 	err := r.DB.Where("id = ?", id).Take(&user).Error
 	if err != nil {
@@ -50,7 +51,7 @@ func (r *UserRepositoryImpl) Update(user *entity.User) error {
 }
 
 // Implementasi metode Delete
-func (r *UserRepositoryImpl) Delete(id uint) error {
+func (r *UserRepositoryImpl) Delete(id uuid.UUID) error {
 	return r.DB.Delete(&entity.User{}, id).Error
 }
 

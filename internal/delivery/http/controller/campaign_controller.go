@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/wahyunurdian26/cst_app_new/internal/helper"
 	"github.com/wahyunurdian26/cst_app_new/internal/model"
@@ -76,4 +78,23 @@ func (h *CampaignController) GetAllCampaign(c *fiber.Ctx) error {
 	}
 
 	return helper.JSONResponse(c, fiber.StatusOK, "Campaigns retrieved successfully", campaigns)
+}
+
+func (h *CampaignController) GetCampaignByID(ctx *fiber.Ctx) error {
+	id_campaign := ctx.Params("id_campaign")
+
+	campaign, err := h.CampaignService.GetById(string(id_campaign))
+	if err != nil {
+		var fiberErr *fiber.Error
+		if errors.As(err, &fiberErr) {
+			return helper.ErrorResponse(ctx, fiberErr.Code, fiberErr.Message)
+		}
+		return helper.ErrorResponse(ctx, fiber.StatusInternalServerError, "Something went wrong")
+	}
+
+	if campaign == nil {
+		return helper.ErrorResponse(ctx, fiber.StatusNotFound, "campaign not found")
+	}
+
+	return helper.JSONResponse(ctx, fiber.StatusOK, "campaign retrieved successfully", campaign)
 }

@@ -15,4 +15,5 @@ type CampaignService interface {
 
 	CreateCampaign(ctx context.Context, request *model.CampaignCreateRequest) (*entity.Campaign, error)
 	GetAll() ([]entity.Campaign, error)
+	GetById(id_campaign string) (*entity.Campaign, error)
 }

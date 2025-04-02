@@ -11,4 +11,5 @@ type CampaignRepository interface {
 	FindByIdCampaign(id_campaign string) (*entity.Campaign, error)
 	CreateCampaign(campaign *entity.Campaign) error
 	GetAllCampaign() ([]entity.Campaign, error)
+	GetById(id_campaign string) (*entity.Campaign, error)
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-playground/validator"
@@ -10,6 +11,7 @@ import (
 	"github.com/wahyunurdian26/cst_app_new/internal/entity"
 	"github.com/wahyunurdian26/cst_app_new/internal/model"
 	"github.com/wahyunurdian26/cst_app_new/internal/repository"
+	"gorm.io/gorm"
 )
 
 type campaignService struct {
@@ -129,6 +131,18 @@ func (u *campaignService) GetAll() ([]entity.Campaign, error) {
 	campaign, err := u.CampaignRepository.GetAllCampaign()
 	if err != nil {
 		u.Log.Warnf("Failed to retrieve campaign: %v", err)
+		return nil, err
+	}
+	return campaign, nil
+}
+
+func (u *campaignService) GetById(id_campaign string) (*entity.Campaign, error) {
+	campaign, err := u.CampaignRepository.GetById(id_campaign)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fiber.ErrNotFound
+		}
+		u.Log.Warnf("Failed to get campaign by ID %s: %v", id_campaign, err)
 		return nil, err
 	}
 	return campaign, nil

@@ -34,9 +34,9 @@ func main() {
 
 	// Setup Routing
 	routeConfig := route.RouteConfig{
-		App:                 app,
-		UserController:      userController,
-		CamapaignController: campaignController,
+		App:                app,
+		UserController:     userController,
+		CampaignController: campaignController,
 	}
 	routeConfig.Setup() // Memanggil fungsi untuk menambahkan routing ke Fiber
 

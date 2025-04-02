@@ -6,9 +6,9 @@ import (
 )
 
 type RouteConfig struct {
-	App                 *fiber.App
-	UserController      *controller.UserController
-	CamapaignController *controller.CampaignController
+	App                *fiber.App
+	UserController     *controller.UserController
+	CampaignController *controller.CampaignController
 }
 
 func (c *RouteConfig) Setup() {
@@ -25,12 +25,13 @@ func (c *RouteConfig) UserRoutes() {
 }
 
 func (c *RouteConfig) CampaignRoutes() {
-	c.App.Get("/api/campaign/offers", c.CamapaignController.GetAllOffer)
-	c.App.Get("/api/campaign/senders", c.CamapaignController.GetAllSender)
-	c.App.Get("/api/campaign/products", c.CamapaignController.GetAllProduct)
-	c.App.Get("/api/campaign/brands", c.CamapaignController.GetAllBrand)
+	c.App.Get("/api/campaign/offers", c.CampaignController.GetAllOffer)
+	c.App.Get("/api/campaign/senders", c.CampaignController.GetAllSender)
+	c.App.Get("/api/campaign/products", c.CampaignController.GetAllProduct)
+	c.App.Get("/api/campaign/brands", c.CampaignController.GetAllBrand)
 
-	c.App.Post("/api/campaign/create", c.CamapaignController.CreateCampaign)
-	c.App.Get("/api/campaign/campaigns", c.CamapaignController.GetAllCampaign)
+	c.App.Post("/api/campaign/create", c.CampaignController.CreateCampaign)
+	c.App.Get("/api/campaign/campaigns", c.CampaignController.GetAllCampaign)
+	c.App.Get("/api/campaign/:id_campaign", c.CampaignController.GetCampaignByID)
 
 }

@@ -2,9 +2,9 @@ package controller
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/wahyunurdian26/cst_app_new/internal/helper"
 	"github.com/wahyunurdian26/cst_app_new/internal/model"
 	"github.com/wahyunurdian26/cst_app_new/internal/service"
@@ -46,12 +46,15 @@ func (h *UserController) GetAllUsers(c *fiber.Ctx) error {
 }
 
 func (h *UserController) GetUserByID(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
+	idStr := c.Params("id")
+
+	// Parse string ke UUID
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID format")
 	}
 
-	user, err := h.UserService.GetById(uint(id))
+	user, err := h.UserService.GetById(uuid.UUID(id))
 	if err != nil {
 		var fiberErr *fiber.Error
 		if errors.As(err, &fiberErr) {
@@ -73,16 +76,19 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	var request model.UserUpdateRequest
-	id, err := strconv.Atoi(c.Params("id"))
+	idStr := c.Params("id")
+
+	// Parse string ke UUID
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID format")
 	}
 
 	if err := c.BodyParser(&request); err != nil {
 		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	request.Id = uint(id)
+	request.Id = uuid.UUID(id)
 	response, err := h.UserService.Update(c.Context(), &request)
 	if err != nil {
 		var fiberErr *fiber.Error
@@ -97,12 +103,15 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 }
 
 func (h *UserController) DeleteUser(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
+	idStr := c.Params("id")
+
+	// Parse string ke UUID
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
+		return helper.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID format")
 	}
 
-	err = h.UserService.Delete(uint(id))
+	err = h.UserService.Delete(uuid.UUID(id))
 	if err != nil {
 		var fiberErr *fiber.Error
 		if errors.As(err, &fiberErr) {

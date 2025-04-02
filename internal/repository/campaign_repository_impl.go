@@ -58,3 +58,15 @@ func (r *CampaignRepositoryImpl) GetAllCampaign() ([]entity.Campaign, error) {
 	err := r.DB.Find(&campaign).Error
 	return campaign, err
 }
+
+func (r *CampaignRepositoryImpl) GetById(id_campaign string) (*entity.Campaign, error) {
+	var campaign entity.Campaign
+	err := r.DB.Where("id_campaign = ?", id_campaign).Take(&campaign).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &campaign, nil
+}

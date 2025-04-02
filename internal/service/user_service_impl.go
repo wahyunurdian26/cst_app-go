@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/wahyunurdian26/cst_app_new/internal/entity"
 	"github.com/wahyunurdian26/cst_app_new/internal/model"
@@ -80,7 +81,7 @@ func (u *userService) Create(ctx context.Context, request *model.UserCreateReque
 	return user, nil
 }
 
-func (u *userService) GetById(id uint) (*entity.User, error) {
+func (u *userService) GetById(id uuid.UUID) (*entity.User, error) {
 	user, err := u.UserRepository.GetById(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -158,7 +159,7 @@ func (u *userService) Update(ctx context.Context, request *model.UserUpdateReque
 	return user, nil // ⬅️ Hanya return entity.User, tanpa response tambahan
 }
 
-func (u *userService) Delete(id uint) error {
+func (u *userService) Delete(id uuid.UUID) error {
 	existingUser, err := u.UserRepository.GetById(id)
 	if err != nil || existingUser == nil {
 		u.Log.Warnf("Delete failed: user ID %d not found", id)
