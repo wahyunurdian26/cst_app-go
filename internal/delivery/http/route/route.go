@@ -9,11 +9,13 @@ type RouteConfig struct {
 	App                *fiber.App
 	UserController     *controller.UserController
 	CampaignController *controller.CampaignController
+	AuthController     *controller.AuthController
 }
 
 func (c *RouteConfig) Setup() {
 	c.UserRoutes()
 	c.CampaignRoutes()
+	c.AuthRoutes()
 }
 
 func (c *RouteConfig) UserRoutes() {
@@ -33,5 +35,11 @@ func (c *RouteConfig) CampaignRoutes() {
 	c.App.Post("/api/campaign/create", c.CampaignController.CreateCampaign)
 	c.App.Get("/api/campaign/campaigns", c.CampaignController.GetAllCampaign)
 	c.App.Get("/api/campaign/:id_campaign", c.CampaignController.GetCampaignByID)
+
+}
+
+func (c *RouteConfig) AuthRoutes() {
+
+	c.App.Post("/api/auth/login", c.AuthController.Login)
 
 }

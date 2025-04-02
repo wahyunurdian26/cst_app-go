@@ -32,11 +32,16 @@ func main() {
 	campaignService := service.NewCampaignService(campaignRepo, validator, log)
 	campaignController := controller.NewCampaignController(campaignService)
 
+	authRepo := repository.NewAuthRepository(db)
+	authService := service.NewAuthService(authRepo)
+	authController := controller.NewAuthController(authService)
+
 	// Setup Routing
 	routeConfig := route.RouteConfig{
 		App:                app,
 		UserController:     userController,
 		CampaignController: campaignController,
+		AuthController:     authController,
 	}
 	routeConfig.Setup() // Memanggil fungsi untuk menambahkan routing ke Fiber
 
