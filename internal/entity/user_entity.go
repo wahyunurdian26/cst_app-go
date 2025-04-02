@@ -22,6 +22,25 @@ type User struct {
 	UpdatedAt              time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
+// type MenuList struct {
+// 	ID       uint   `gorm:"primaryKey"`
+// 	CodeMenu string `gorm:"type:varchar(8);unique"`
+// 	FormName string `gorm:"type:varchar(128)"`
+// 	FormURL  string `gorm:"type:varchar(128)"`
+// }
+
+// type RoleMenu struct {
+// 	ID     uint
+// 	RoleID string `gorm:"type:varchar(6)"`
+// 	MenuID uint
+// }
+
+// type UserMenu struct {
+// 	ID        uint
+// 	UserEmail string `gorm:"type:varchar(128)"`
+// 	MenuID    uint
+// }
+
 // BeforeCreate untuk generate UUID sebelum menyimpan user
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID = uuid.New()

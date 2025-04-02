@@ -35,13 +35,14 @@ func main() {
 	authRepo := repository.NewAuthRepository(db)
 	authService := service.NewAuthService(authRepo)
 	authController := controller.NewAuthController(authService)
-
+	menuController := controller.NewMenuController(db)
 	// Setup Routing
 	routeConfig := route.RouteConfig{
 		App:                app,
 		UserController:     userController,
 		CampaignController: campaignController,
 		AuthController:     authController,
+		MenuController:     menuController,
 	}
 	routeConfig.Setup() // Memanggil fungsi untuk menambahkan routing ke Fiber
 

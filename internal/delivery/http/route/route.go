@@ -3,27 +3,32 @@ package route
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/wahyunurdian26/cst_app_new/internal/delivery/http/controller"
+	"github.com/wahyunurdian26/cst_app_new/internal/delivery/http/middleware"
+	"gorm.io/gorm"
 )
 
 type RouteConfig struct {
+	DB                 *gorm.DB
 	App                *fiber.App
 	UserController     *controller.UserController
 	CampaignController *controller.CampaignController
 	AuthController     *controller.AuthController
+	MenuController     *controller.MenuController
 }
 
 func (c *RouteConfig) Setup() {
 	c.UserRoutes()
 	c.CampaignRoutes()
 	c.AuthRoutes()
+	c.MenuRoutes()
 }
 
 func (c *RouteConfig) UserRoutes() {
-	c.App.Post("/api/users", c.UserController.CreateUser)
-	c.App.Get("/api/users", c.UserController.GetAllUsers)
-	c.App.Get("/api/users/:id", c.UserController.GetUserByID)
-	c.App.Patch("/api/users/:id", c.UserController.UpdateUser)
-	c.App.Delete("/api/users/:id", c.UserController.DeleteUser)
+	c.App.Post("/api/users", middleware.RoleMiddleware("ROL000"), c.UserController.CreateUser)
+	c.App.Get("/api/users", middleware.RoleMiddleware("ROL000"), c.UserController.GetAllUsers)
+	c.App.Get("/api/users/:id", middleware.RoleMiddleware("ROL000"), c.UserController.GetUserByID)
+	c.App.Patch("/api/users/:id", middleware.RoleMiddleware("ROL000"), c.UserController.UpdateUser)
+	c.App.Delete("/api/users/:id", middleware.RoleMiddleware("ROL000"), c.UserController.DeleteUser)
 }
 
 func (c *RouteConfig) CampaignRoutes() {
@@ -42,4 +47,11 @@ func (c *RouteConfig) AuthRoutes() {
 
 	c.App.Post("/api/auth/login", c.AuthController.Login)
 
+}
+
+func (c *RouteConfig) MenuRoutes() {
+	menuGroup := c.App.Group("/api/menu")
+
+	// Endpoint untuk menampilkan semua menu yang dapat diakses berdasarkan role user
+	menuGroup.Get("/", middleware.RoleMiddleware("ROL000", "ROL001", "ROL002"), c.MenuController.GetMenus)
 }

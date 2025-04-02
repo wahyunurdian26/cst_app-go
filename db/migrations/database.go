@@ -17,6 +17,9 @@ func MigrateDB(db *gorm.DB) {
 		&entity.Sender{},
 		&entity.Product{},
 		&entity.Campaign{},
+		&entity.Menu{},
+		&entity.RoleMenu{},
+		&entity.UserMenu{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
