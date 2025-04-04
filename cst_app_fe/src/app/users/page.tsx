@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import ClientLayout from "@/components/ClientLayout";
-
 import { useRouter } from "next/navigation";
-import Layout from "@/components/layouts";
-
+import ClientLayout from "@/components/ClientLayout"; // pastikan ini file client component
 
 type User = {
   id: string;
@@ -14,10 +11,7 @@ type User = {
   username: string;
   id_role: string;
   id_business_group: string;
-  id_sub_business_group: string;
-  email_pic: string;
   status_active: boolean;
-  id_business_group_digital: string;
   created_at: string;
   updated_at: string;
 };
@@ -61,7 +55,7 @@ export default function UsersPage() {
   };
 
   return (
-    <Layout>
+    <ClientLayout>
       <h1 className="text-xl font-bold text-gray-800 mb-4">Daftar Pengguna</h1>
       <button
         onClick={() => router.push("/users/create")}
@@ -113,6 +107,6 @@ export default function UsersPage() {
           </tbody>
         </table>
       </div>
-    </Layout>
+    </ClientLayout>
   );
 }
